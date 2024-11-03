@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+"""Log parsing to test with generators"""
 
 import sys
 
