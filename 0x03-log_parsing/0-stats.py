@@ -77,6 +77,6 @@ try:
             print_statistics()
 
 except KeyboardInterrupt:
-    # Handle keyboard interruption (CTRL + C) and print statistics
+    # Handl keyboard interruption (CTRL + C) and print statistics
     print_statistics()
     sys.exit(0)
