@@ -3,48 +3,80 @@
 log parsing
 """
 
+
 import sys
-import re
+import signal
 
 
-def output(log: dict) -> None:
-    """
-    helper function to display stats
-    """
-    print("File size: {}".format(log["file_size"]))
-    for code in sorted(log["code_frequency"]):
-        if log["code_frequency"][code]:
-            print("{}: {}".format(code, log["code_frequency"][code]))
+# Initialize counters and data structures
+total_file_size = 0
+status_code_counts = {
+    "200": 0,
+    "301": 0,
+    "400": 0,
+    "401": 0,
+    "403": 0,
+    "404": 0,
+    "405": 0,
+    "500": 0
+}
+valid_status_codes = set(status_code_counts.keys())
+line_count = 0
 
 
-if __name__ == "__main__":
-    regex = re.compile(
-    r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} - \[\d{4}-\d{2}-\d{2}\d{2}:\d{2}:\d{2}.\d+\] "GET /projects/260 HTTP/1.1" (.{3}) (\d+)')  # nopep8
+def print_statistics():
+    """Print the accumulated statistics."""
+    print(f"File size: {total_file_size}")
+    for code in sorted(status_code_counts.keys()):
+        if status_code_counts[code] > 0:
+            print(f"{code}: {status_code_counts[code]}")
 
-    line_count = 0
-    log = {}
-    log["file_size"] = 0
-    log["code_frequency"] = {
-        str(code): 0 for code in [
-            200, 301, 400, 401, 403, 404, 405, 500]}
 
-    try:
-        for line in sys.stdin:
-            line = line.strip()
-            match = regex.fullmatch(line)
-            if (match):
-                line_count += 1
-                code = match.group(1)
-                file_size = int(match.group(2))
+def handle_interrupt(signal, frame):
+    """Handle keyboard interruption (CTRL + C) and print statistics."""
+    print_statistics()
+    sys.exit(0)
 
-                # File size
-                log["file_size"] += file_size
+# Register the signal handler for CTRL + C
+signal.signal(signal.SIGINT, handle_interrupt)
 
-                # status code
-                if (code.isdecimal()):
-                    log["code_frequency"][code] += 1
 
-                if (line_count % 10 == 0):
-                    output(log)
-    finally:
-        output(log)
+try:
+    for line in sys.stdin:
+        line_count += 1
+        try:
+            parts = line.split()
+            # Validate and extract components of the line
+            if len(parts) < 7:
+                continue
+            ip_address = parts[0]
+            date = parts[3] + " " + parts[4]
+            method = parts[5].strip("\"")
+            resource = parts[6]
+            protocol = parts[7].strip("\"")
+            status_code = parts[8]
+            file_size = int(parts[9])
+
+            # Validate the request format
+            if method != "GET" or resource != "/projects/260" or protocol != "HTTP/1.1":
+                continue
+
+            # Update total file size
+            total_file_size += file_size
+
+            # Update status code count if valid
+            if status_code in valid_status_codes:
+                status_code_counts[status_code] += 1
+
+        except (IndexError, ValueError):
+            # Skip lines that don't match the expected format
+            continue
+
+        # Print statistics every 10 lines
+        if line_count % 10 == 0:
+            print_statistics()
+
+except KeyboardInterrupt:
+    # Handle keyboard interruption (CTRL + C) and print statistics
+    print_statistics()
+    sys.exit(0)
