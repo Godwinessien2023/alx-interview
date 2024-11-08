@@ -1,42 +1,52 @@
 #!/usr/bin/python3
-"""ALX SE nqueens"""
+"""
+ALX SE nqueens
+"""
 import sys
 
 
-
 def print_solutions(board, N):
-    """Print the board configuration for a solution"""
-    solution = []
-    for row in range(N):
-        for col in range(N):
-            if board[row] == col:
-                solution.append([row, col])
+    """Prints the board configuration for a solution in the required format."""
+    solution = [[row, board[row]] for row in range(N)]
     print(solution)
 
+
 def is_safe(board, row, col):
-    """Check if a queen can be placed on board[row][col] without conflicts"""
+    """
+    Check if placing a queen at (row, col) is safe from attacks.
+    A queen can be attacked if there's another queen in the same column
+    or on either diagonal.
+    """
     for i in range(row):
-        # Check column and both diagonals
         if board[i] == col or \
            board[i] - i == col - row or \
            board[i] + i == col + row:
             return False
     return True
 
+
 def solve_nqueens(board, row, N):
-    """Recursive backtracking function to find all solutions"""
+    """
+    Recursively attempts to place queens
+    on each row to find all solutions.
+    """
     if row == N:
         print_solutions(board, N)
         return
 
     for col in range(N):
         if is_safe(board, row, col):
-            board[row] = col  # Place queen
+            board[row] = col  # Place queen at (row, col)
             solve_nqueens(board, row + 1, N)
-            board[row] = -1  # Backtrack
+            board[row] = -1  # Reset (backtrack)
 
-def main():
-    """Main function to handle input and validate arguments"""
+
+def validate_and_parse_args():
+    """
+    Validates and parses command-line arguments.
+    Ensures there's exactly one argument and that it's a valid integer ≥ 4.
+    Returns the integer value of N if valid.
+    """
     if len(sys.argv) != 2:
         print("Usage: nqueens N")
         sys.exit(1)
@@ -51,8 +61,15 @@ def main():
         print("N must be at least 4")
         sys.exit(1)
 
-    board = [-1] * N  # -1 indicates no queen is placed in the row
+    return N
+
+
+def main():
+    """Main function to initialize the board and start solving."""
+    N = validate_and_parse_args()
+    board = [-1] * N
     solve_nqueens(board, 0, N)
+
 
 if __name__ == "__main__":
     main()
