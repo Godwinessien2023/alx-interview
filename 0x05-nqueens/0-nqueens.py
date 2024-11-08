@@ -69,7 +69,3 @@ def main():
     N = validate_and_parse_args()
     board = [-1] * N
     solve_nqueens(board, 0, N)
-
-
-if __name__ == "__main__":
-    main()
