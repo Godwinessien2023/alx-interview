@@ -3,55 +3,56 @@
 import sys
 
 
-def n_queen(n):
-    """Return all possible arrange for the n-queen problem."""
-    col = set()
-    pos = set()
-    neg = set()
-    res = []
-    state = []
 
-    def backtrack(r):
-        """Backtrack using recursion"""
-        if r == n:
-            res.append([val for val in state])
-        for c in range(n):
-            if c in col or (r + c) in pos or (r - c) in neg:
-                continue
-            col.add(c)
-            pos.add(r + c)
-            neg.add(r - c)
-            state.append([r, c])
+def print_solutions(board, N):
+    """Print the board configuration for a solution"""
+    solution = []
+    for row in range(N):
+        for col in range(N):
+            if board[row] == col:
+                solution.append([row, col])
+    print(solution)
 
-            backtrack(r + 1)
+def is_safe(board, row, col):
+    """Check if a queen can be placed on board[row][col] without conflicts"""
+    for i in range(row):
+        # Check column and both diagonals
+        if board[i] == col or \
+           board[i] - i == col - row or \
+           board[i] + i == col + row:
+            return False
+    return True
 
-            col.remove(c)
-            pos.remove(r + c)
-            neg.remove(r - c)
-            state.pop()
-    backtrack(0)
-    return res
+def solve_nqueens(board, row, N):
+    """Recursive backtracking function to find all solutions"""
+    if row == N:
+        print_solutions(board, N)
+        return
 
+    for col in range(N):
+        if is_safe(board, row, col):
+            board[row] = col  # Place queen
+            solve_nqueens(board, row + 1, N)
+            board[row] = -1  # Backtrack
 
 def main():
-    """Main Entry"""
+    """Main function to handle input and validate arguments"""
     if len(sys.argv) != 2:
         print("Usage: nqueens N")
         sys.exit(1)
 
-    n = sys.argv[1]
     try:
-        n = int(n)
+        N = int(sys.argv[1])
     except ValueError:
         print("N must be a number")
         sys.exit(1)
 
-    if n < 4:
+    if N < 4:
         print("N must be at least 4")
         sys.exit(1)
 
-    for res in n_queen(n):
-        print(res)
+    board = [-1] * N  # -1 indicates no queen is placed in the row
+    solve_nqueens(board, 0, N)
 
-
-main()
+if __name__ == "__main__":
+    main()
