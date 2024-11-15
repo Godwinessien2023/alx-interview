@@ -39,3 +39,4 @@ async function printChars () {
 }
 
 printChars();
+// Line comment
